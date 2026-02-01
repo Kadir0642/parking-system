@@ -9,49 +9,73 @@
 Tekrar npm run dev yazıp Enter'a bas.
 */
 
-import express, {Request, Response } from 'express';
+import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
-import {query} from './db'; // oluşturduğumuz db dosyasını çağırdık.
+import { query } from './db';
 
-//1.ayarları yükle (.env dosyasını okur)
 dotenv.config();
 
-//2.Uygulamayı (Server) oluştur.
-const app =express(); // bana boş bir sunucu binası inşa et
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-//Eğer .env dosyasında PORT yoksa 3000'i kullan
-const PORT=process.env.PORT || 3000;
+// 1. DİKKAT: Gelen JSON verilerini okumak için bu ayar ŞARTTIR!
+app.use(express.json());
 
-// 3.bir "Rota" (Route) Tanımla
-//Tarayıcıdan ana sayfaya "localhost:3000/" gelindiğinde ne olsun ?
+// Basit test rotası
+app.get('/', async (req: Request, res: Response) => {
+    const result = await query('SELECT NOW()');
+    res.send(`BilPark Sunucusu Aktif! Saat: ${result.rows[0].now}`);
+});
 
-//Ana Sayfa Rotası
-app.get('/',async(req:Request,res:Response)=>
-{
-    try{
-        //Veri tabanına "Saat kaç ?" diyelim.
-        const result= await query(' SELECT NOW() ');
+// 🚀 ÖZELLİK 1: ARAÇ GİRİŞİ (CHECK-IN)
+// Bu adrese POST isteği atılınca çalışır
+app.post('/check-in', async (req: Request, res: Response) => {
+    try {
+        const { plate_number } = req.body; // Gelen veriden plakayı al
 
-        //Sonucu ekrana yazalım
-        res.send(`
-            <h1>Bilpark Backend çalişiyor</h1>
-            <p>Veritabani Bağlantisi: <strong>Başarili</strong></p>
-            <p>Sunucu Saati: ${result.rows[0].now}</p>
-            `);
-    }catch(error)
-    {
-        console.error("Veritabani hatasi",error);
-        res.status(500).send('Veritabanina bağlanilamadi !');
+        if (!plate_number) {
+            return res.status(400).json({ error: 'Plaka numarası gereklidir!' });
+        }
+
+        console.log(`Giriş İsteği: ${plate_number}`);
+
+        // 1. Adım: Araç daha önce kayıtlı mı?
+        let vehicleResult = await query('SELECT * FROM vehicles WHERE plate_number = $1', [plate_number]);
+        let vehicleId;
+
+        if (vehicleResult.rows.length === 0) {
+            // Kayıtlı değilse yeni oluştur
+            console.log('Yeni araç oluşturuluyor...');
+            const newVehicle = await query(
+                'INSERT INTO vehicles (plate_number) VALUES ($1) RETURNING id',
+                [plate_number]
+            );
+            vehicleId = newVehicle.rows[0].id;
+        } else {
+            // Zaten varsa ID'sini al
+            console.log('Araç zaten kayıtlı.');
+            vehicleId = vehicleResult.rows[0].id;
+        }
+
+        // 2. Adım: Park kaydı oluştur (Giriş yap)
+        // is_active = true demek "araç şu an içeride" demektir.
+        const parkResult = await query(
+            'INSERT INTO parks (vehicle_id, is_active) VALUES ($1, true) RETURNING *',
+            [vehicleId]
+        );
+
+        // Başarılı cevabı döndür
+        res.json({
+            message: 'Giriş Başarılı! 🚧 Bariyer Açılıyor...',
+            park_record: parkResult.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Giriş Hatası:", error);
+        res.status(500).json({ error: 'Sunucu hatası oluştu' });
     }
-})
+});
 
-//4.Sunucuyu Başlat ve Dinlemeye Başla
-app.listen(PORT, ()=>{
-    console.log(`Sunucu şu adreste çalişiyor: http://localhost:${PORT}`);
-})
-//3000 numaralı Port için dinlemeye al
-
-
-// ilerlemeden şuana kadar ne yaptık ettik kodların ne anlam
-// ifade ettiğini ve projenin genel fotoları , tablo düzeni vs
-// onları ekle sonra veritabanı mimarisi geçelim.
+app.listen(PORT, () => {
+    console.log(`Sunucu http://localhost:${PORT} adresinde hazır! 🚀`);
+});
