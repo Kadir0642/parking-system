@@ -3,9 +3,15 @@
 * nodemon devreye girecek ve her kayıt alışta 
 * sunucuyu otomatik yeniden başlatacak.
 */
-import express, {Request, Response } from 'express';
 
+/*Klavyeden CTRL + C tuşlarına bas (Sunucuyu durdurur).
+
+Tekrar npm run dev yazıp Enter'a bas.
+*/
+
+import express, {Request, Response } from 'express';
 import dotenv from 'dotenv';
+import {query} from './db'; // oluşturduğumuz db dosyasını çağırdık.
 
 //1.ayarları yükle (.env dosyasını okur)
 dotenv.config();
@@ -19,10 +25,25 @@ const PORT=process.env.PORT || 3000;
 // 3.bir "Rota" (Route) Tanımla
 //Tarayıcıdan ana sayfaya "localhost:3000/" gelindiğinde ne olsun ?
 
-//Birisi kapıdan ( ana adres / )girerse,ona "... mesajı göster"
-app.get('/',(req: Request, res:Response)=> {
-    res.send('Bilpark Backend Servisi Çalişiyor! ');
-});
+//Ana Sayfa Rotası
+app.get('/',async(req:Request,res:Response)=>
+{
+    try{
+        //Veri tabanına "Saat kaç ?" diyelim.
+        const result= await query(' SELECT NOW() ');
+
+        //Sonucu ekrana yazalım
+        res.send(`
+            <h1>Bilpark Backend çalişiyor</h1>
+            <p>Veritabani Bağlantisi: <strong>Başarili</strong></p>
+            <p>Sunucu Saati: ${result.rows[0].now}</p>
+            `);
+    }catch(error)
+    {
+        console.error("Veritabani hatasi",error);
+        res.status(500).send('Veritabanina bağlanilamadi !');
+    }
+})
 
 //4.Sunucuyu Başlat ve Dinlemeye Başla
 app.listen(PORT, ()=>{
@@ -30,3 +51,7 @@ app.listen(PORT, ()=>{
 })
 //3000 numaralı Port için dinlemeye al
 
+
+// ilerlemeden şuana kadar ne yaptık ettik kodların ne anlam
+// ifade ettiğini ve projenin genel fotoları , tablo düzeni vs
+// onları ekle sonra veritabanı mimarisi geçelim.
