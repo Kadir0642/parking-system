@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BilPark - Belediye Otopark Sistemi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; }
+        .header-box { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: white; padding: 2rem; border-radius: 0 0 20px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .card { border: none; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .card:hover { transform: translateY(-2px); }
+        .btn-custom { padding: 12px; font-weight: 600; border-radius: 8px; }
+        .plate-box { background: #fff; border: 2px solid #000; border-radius: 5px; padding: 5px 10px; font-family: monospace; font-weight: bold; display: inline-block; min-width: 100px; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
+        .status-badge { font-size: 0.8rem; padding: 5px 10px; border-radius: 20px; background-color: #e8f5e9; color: #2e7d32; }
+    </style>
+</head>
+<body>
+
+    <div class="header-box text-center mb-5">
+        <h1><i class="fas fa-parking"></i> BilPark Yönetim Paneli</h1>
+        <p class="opacity-75">Akıllı Şehir Otopark Çözümü</p>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            
+            <div class="col-md-5 mb-4">
+                <div class="card p-4 h-100">
+                    <h4 class="mb-4 text-primary"><i class="fas fa-car-side"></i> İşlem Yap</h4>
+                    
+                    <div class="mb-4">
+                        <label class="form-label text-muted">Araç Plakası</label>
+                        <input type="text" id="plateInput" class="form-control form-control-lg text-center fw-bold text-uppercase fs-3" placeholder="34 TR 123" maxlength="12">
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <button onclick="handleCheckIn()" class="btn btn-success w-100 btn-custom"><i class="fas fa-sign-in-alt"></i> GİRİŞ</button>
+                        </div>
+                        <div class="col-6">
+                            <button onclick="handleCheckOut()" class="btn btn-danger w-100 btn-custom"><i class="fas fa-sign-out-alt"></i> ÇIKIŞ</button>
+                        </div>
+                    </div>
+
+                    <div id="resultArea" class="mt-4 p-3 rounded bg-light" style="display: none; border-left: 5px solid #ccc;">
+                        <p id="resultMessage" class="mb-0 fw-bold"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-7 mb-4">
+                <div class="card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-secondary mb-0"><i class="fas fa-list-ul"></i> İçerideki Araçlar</h5>
+                        <button onclick="loadActiveVehicles()" class="btn btn-sm btn-outline-primary"><i class="fas fa-sync-alt"></i> Yenile</button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Plaka</th>
+                                    <th>Giriş Saati</th>
+                                    <th>Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vehicleList">
+                                <tr><td colspan="3" class="text-center text-muted">Yükleniyor...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:3000";
+
+        // Sayfa açılınca listeyi yükle
+        window.onload = loadActiveVehicles;
+
+        // 1. LİSTELEME FONKSİYONU
+        async function loadActiveVehicles() {
+            try {
+                const response = await fetch(`${API_URL}/active-vehicles`);
+                const vehicles = await response.json();
+                
+                const listBody = document.getElementById('vehicleList');
+                listBody.innerHTML = ""; // Listeyi temizle
+
+                if (vehicles.length === 0) {
+                    listBody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4">Otopark şu an boş 🌳</td></tr>';
+                    return;
+                }
+
+                vehicles.forEach(v => {
+                    const date = new Date(v.entry_time).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+                    const row = `
+                        <tr>
+                            <td><span class="plate-box">${v.plate_number}</span></td>
+                            <td><i class="far fa-clock text-muted"></i> ${date}</td>
+                            <td><span class="status-badge">Park Halinde</span></td>
+                        </tr>
+                    `;
+                    listBody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error("Liste hatası:", error);
+            }
+        }
+
+        // 2. GİRİŞ İŞLEMİ
+        async function handleCheckIn() {
+            const plate = document.getElementById('plateInput').value.toUpperCase();
+            if (!plate) return alert("Plaka giriniz!");
+
+            try {
+                const res = await fetch(`${API_URL}/check-in`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ plate_number: plate })
+                });
+                const data = await res.json();
+                
+                showMessage(true, `✅ ${plate} giriş yaptı. Bariyer açıldı.`);
+                loadActiveVehicles(); // Listeyi güncelle
+            } catch (err) {
+                showMessage(false, "Bağlantı hatası!");
+            }
+        }
+
+        // 3. ÇIKIŞ İŞLEMİ
+        async function handleCheckOut() {
+            const plate = document.getElementById('plateInput').value.toUpperCase();
+            if (!plate) return alert("Plaka giriniz!");
+
+            try {
+                const res = await fetch(`${API_URL}/check-out`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ plate_number: plate })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    showMessage(true, `👋 ${plate} çıkış yaptı.<br>Süre: ${data.stay_duration}<br>Tutar: <span class="text-danger">${data.total_price}</span>`);
+                    loadActiveVehicles(); // Listeyi güncelle
+                } else {
+                    showMessage(false, `⚠️ ${data.error}`);
+                }
+            } catch (err) {
+                showMessage(false, "Bağlantı hatası!");
+            }
+        }
+
+        function showMessage(isSuccess, msg) {
+            const area = document.getElementById('resultArea');
+            const txt = document.getElementById('resultMessage');
+            area.style.display = 'block';
+            area.style.borderLeftColor = isSuccess ? '#198754' : '#dc3545';
+            txt.innerHTML = msg;
+        }
+    </script>
+</body>
+</html>
