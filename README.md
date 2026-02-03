@@ -1,47 +1,74 @@
-# 🅿️ BilPark - Akıllı Otopark Yönetim Sistemi
+# 🅿️ BilPark - Akıllı Şehir Otopark Yönetim Sistemi
 
-> **"Park Et & Unut"**: Şehir içi otopark yönetimini dijitalleştiren, gelir kaçağını önleyen ve operasyonu hızlandıran IoT tabanlı çözüm.
+![License](https://img.shields.io/badge/license-MIT-blue.svg) ![Status](https://img.shields.io/badge/status-Active%20Development-green.svg) ![Tech](https://img.shields.io/badge/tech-Flutter%20%7C%20Node.js%20%7C%20Supabase-blueviolet)
 
-## 🎯 Projenin Amacı (The Problem & Solution)
+> **"Park Et & Unut"**: Şehir içi otopark yönetimini dijitalleştiren, gelir kaçağını önleyen, IoT ve Yapay Zeka destekli yeni nesil belediye çözümüdür.
+
+---
+
+## 🎯 Proje Vizyonu (Vision)
 
 **Problem:**
-Mevcut sistemde otopark görevlileri kağıt-kalem ile araç takibi yapmakta, giriş-çıkış saatlerini manuel not etmektedir. Bu durum:
-* Yoğun saatlerde araçların kaçmasına (gelir kaybına),
-* Süre hesaplamalarında vatandaş ile tartışmalara,
-* Veri güvenliği ve raporlama eksikliğine yol açmaktadır.
+Geleneksel sistemde otopark görevlileri ("Değnekçiler") kağıt-kalem veya basit fiş cihazlarıyla çalışmaktadır. Bu durum; denetim eksikliğine, gelir kaçaklarına (kayıt dışı park), hatalı ücret hesaplamalarına ve merkezi bir yönetim eksikliğine neden olmaktadır.
 
 **Çözüm:**
-BilPark, mobil uygulama ve görüntü işleme (OCR) teknolojilerini kullanarak süreci otomatize eder. Görevli sadece aracın fotoğrafını çeker; sistem plakayı, konumu ve saati otomatik işler.
+**BilPark**, sahadan veri toplayan bir **Mobil Uygulama** ve bu verileri işleyen merkezi bir **Komuta Paneli (Dashboard)** sunar.
+* **Saha Personeli:** Aracın fotoğrafını çeker, OCR ile plaka ve GPS konumu otomatik sisteme işlenir.
+* **Yönetim Merkezi:** Hangi caddede kaç araç var, anlık ciro ne kadar, personel performansı nedir canlı izler.
 
 ---
 
-## 🛠️ Kullanılan Teknolojiler (Tech Stack)
 
-Bu proje **Monorepo** mimarisi ile geliştirilmektedir.
+## 🛠️ Teknoloji Yığını (Tech Stack)
 
-### Backend (Sunucu & API)
-* **Dil:** TypeScript & Node.js
-* **Framework:** Express.js
-* **Veritabanı:** PostgreSQL (Supabase)
-* **Araçlar:** Git, VS Code
+Proje, ölçeklenebilir ve modern bir mimari üzerine kurulmuştur.
 
-### Mobile (Saha Personeli Uygulaması) - *Geliştirme Aşamasında*
-* **Framework:** React Native (Expo)
-* **Özellikler:** Kamera Entegrasyonu, Konum Servisleri
+| Alan | Teknoloji | Açıklama |
+| :--- | :--- | :--- |
+| **Mobile App** | 💙 **Flutter (Dart)** | iOS & Android için Native performanslı saha uygulaması. |
+| **Backend** | 💚 **Node.js & TypeScript** | Güvenli, hızlı ve tip korumalı REST API mimarisi. |
+| **Database** | ⚡ **PostgreSQL (Supabase)** | İlişkisel veritabanı, gerçek zamanlı veri akışı. |
+| **Admin Panel** | 🎨 **HTML5 & Bootstrap 5** | Yönetim ve canlı izleme paneli (Responsive). |
+| **AI & OCR** | 👁️ **Google ML Kit** | Cihaz üzerinde (On-device) plaka ve metin okuma. |
 
-### AI & Görüntü İşleme
-* **Teknoloji:** OCR (Optik Karakter Tanıma) & YOLO Modelleri
-* **İşlev:** Otomatik plaka tanıma ve araç tipi sınıflandırma
+
+---
+## 📂 Proje Yapısı
+
+```bash
+bilpark-parking-system/
+├── backend/            # Node.js & TypeScript API Sunucusu
+│   ├── src/
+│   │   ├── index.ts    # API Endpoint'leri
+│   │   └── db.ts       # Veritabanı Bağlantısı
+├── frontend/           # Yönetici Paneli
+│   └── dashboard.html  # Canlı İzleme Ekranı
+├── mobile_flutter/     # Saha Personel Uygulaması (Geliştirme Aşamasında)
+└── README.md           # Proje Dokümantasyonu
+```
 
 ---
 
-## 🚀 Kurulum ve Çalıştırma
+## ⚡ Temel Özellikler (Key Features)
+### 🖥️ Yönetici Paneli (Command Center)
+* Canlı İzleme: Sahadaki araç giriş-çıkışlarını 3 saniyelik periyotlarla anlık izleme.
 
-Projeyi yerel makinenizde çalıştırmak için aşağıdaki adımları izleyin.
+* Bölge Filtreleme: "Atatürk Caddesi", "Sahil Yolu" gibi spesifik bölgeleri filtreleyip yoğunluk haritası çıkarma.
 
-### Ön Gereksinimler
-* Node.js (v18+)
-* Git
+* Gelir Yönetimi: Toplam hasılatı ve cadde bazlı ciro dağılımını raporlama.
+
+* Acil Durum: Tek tuşla veritabanı sıfırlama ve sistem yönetimi.
+
+#### 📱 Mobil Uygulama (Saha Personeli)
+* OCR ile Hızlı Giriş: Plakayı elle yazmak yok; kamera otomatik okur.
+
+* Konum Etiketleme: Giriş yapılan konumu (GPS) otomatik olarak kaydeder.
+
+* Dinamik Tarife: Giriş-Çıkış saatine göre milisaniye hassasiyetinde ücret hesaplar.
+
+## ⚙️ Kurulum ve Çalıştırma
+
+Projeyi yerel ortamınızda test etmek için aşağıdaki adımları izleyin
 
 ### 1. Repoyu Klonlayın
 ```bash
@@ -53,26 +80,39 @@ cd bilpark-parking-system
 ```bash
 cd backend
 npm install
+npm run dev
 ```
-
-### 3.Geliştirme Sunucusunu Başlatma
+* Sunucu varsayılan olarak http://localhost:3000 adresinde çalışacaktır.
+### 3. Yönetici Paneli
 ```bash
+cd backend
+npm install
 npm run dev
 ```
 
--Sunucu varsayılan olarak http://localhost:3000 adresinde çalışacaktır.
+
+### 4. Mobil Uygulama (Flutter)
+* (Flutter SDK ve Android Studio kurulu olmalıdır)
+```bash
+cd mobile_flutter
+flutter pub get
+flutter run
+```
+
 
 ### 🗺️ Yol Haritası (Roadmap)
 ```bash
-[x] Proje Mimarisi ve Backend Kurulumu
+[x] Faz 1: Backend Mimarisi (Node.js & Supabase Kurulumu)
 
-[ ] Veritabanı Tasarımı ve Bağlantısı
+[x] Faz 2: Veritabanı Tasarımı (Araçlar, Park Kayıtları, Konum Logları)
 
-[ ] API Endpoint lerinin Yazılması (Giriş/Çıkış İşlemleri)
+[x] Faz 3: API Geliştirme (Giriş, Çıkış, Ciro, Filtreleme Endpointleri)
 
-[ ] Mobil Uygulama Arayüz Tasarımı
+[x] Faz 4: Yönetici Paneli (Canlı Takip Dashboardu)
 
-[ ] Kamera ve OCR Entegrasyonu
+[ ] Faz 5: Mobil Uygulama Geliştirme (Flutter UI Tasarımı) 🚧 Şu an buradayız
 
-[ ] Yönetici Paneli Raporlamaları
+[ ] Faz 6: Yapay Zeka Entegrasyonu (Kamera ile Plaka Okuma)
+
+[ ] Faz 7: Saha Testleri & Demo
 ```
