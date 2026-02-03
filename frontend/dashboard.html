@@ -3,78 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BilPark - Belediye Otopark Sistemi</title>
+    <title>BilPark - Yönetici Paneli</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        body { background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; }
-        .header-box { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: white; padding: 2rem; border-radius: 0 0 20px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .card { border: none; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: transform 0.2s; }
-        .card:hover { transform: translateY(-2px); }
-        .btn-custom { padding: 12px; font-weight: 600; border-radius: 8px; }
-        .plate-box { background: #fff; border: 2px solid #000; border-radius: 5px; padding: 5px 10px; font-family: monospace; font-weight: bold; display: inline-block; min-width: 100px; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
-        .status-badge { font-size: 0.8rem; padding: 5px 10px; border-radius: 20px; background-color: #e8f5e9; color: #2e7d32; }
+        body { background-color: #eef2f7; font-family: 'Segoe UI', sans-serif; }
+        .header-box { background: linear-gradient(135deg, #1a2980, #26d0ce); color: white; padding: 1.5rem; border-radius: 0 0 20px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .stat-card { background: white; border: none; border-radius: 15px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .plate-badge { background: #343a40; color: white; padding: 5px 10px; border-radius: 5px; font-family: monospace; font-weight: bold; border: 2px solid #000; }
+        .filter-box { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+        .table thead th { border-top: none; color: #888; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; }
+        .location-tag { font-size: 0.8rem; padding: 3px 8px; background: #e3f2fd; color: #1976d2; border-radius: 10px; font-weight: 600; }
     </style>
 </head>
 <body>
 
-<div class="header-box text-center mb-5 position-relative">
-    <h1><i class="fas fa-parking"></i> BilPark Yönetim Paneli</h1>
-    <p class="opacity-75">Akıllı Şehir Otopark Çözümü</p>
-    
-    <button onclick="handleReset()" class="btn btn-outline-light btn-sm position-absolute top-0 end-0 m-3">
-        <i class="fas fa-trash-alt">Sistemi Sıfırla</i> 
-    </button>
-</div>
+    <div class="header-box d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0"><i class="fas fa-chart-line"></i> BilPark Komuta Merkezi</h2>
+            <p class="mb-0 opacity-75">Canlı Saha İzleme ve Gelir Yönetimi</p>
+        </div>
+        <button onclick="handleReset()" class="btn btn-danger btn-sm shadow-sm">
+            <i class="fas fa-exclamation-triangle"></i> Veritabanını Sıfırla
+        </button>
+    </div>
 
-    <div class="container">
+    <div class="container-fluid px-4">
+        
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="stat-card border-start border-5 border-success">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-1">Toplam Ciro</h6>
+                            <h2 class="mb-0 fw-bold text-success"><span id="totalRevenue">0</span> ₺</h2>
+                        </div>
+                        <i class="fas fa-wallet fa-2x text-success opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card border-start border-5 border-primary">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-1">Aktif Araç Sayısı</h6>
+                            <h2 class="mb-0 fw-bold text-primary"><span id="activeCount">0</span></h2>
+                        </div>
+                        <i class="fas fa-car fa-2x text-primary opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card border-start border-5 border-warning">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-1">En Yoğun Bölge</h6>
+                            <h4 class="mb-0 fw-bold text-dark"><span id="topZone">-</span></h4>
+                        </div>
+                        <i class="fas fa-map-marker-alt fa-2x text-warning opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             
-            <div class="col-md-5 mb-4">
-                <div class="card p-4 h-100">
-                    <h4 class="mb-4 text-primary"><i class="fas fa-car-side"></i> İşlem Yap</h4>
+            <div class="col-lg-8">
+                <div class="filter-box d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-secondary"><i class="fas fa-video"></i> Canlı Araç Akışı</h5>
                     
-                    <div class="mb-4">
-                        <label class="form-label text-muted">Araç Plakası</label>
-                        <input type="text" id="plateInput" class="form-control form-control-lg text-center fw-bold text-uppercase fs-3" placeholder="34 TR 123" maxlength="12">
+                    <div class="d-flex align-items-center">
+                        <label class="me-2 text-muted small fw-bold">BÖLGE FİLTRESİ:</label>
+                        <select id="zoneFilter" class="form-select form-select-sm fw-bold text-primary" style="width: 200px;" onchange="loadData()">
+                            <option value="Tüm Bölgeler">🌐 Tüm Bölgeler</option>
+                            <option value="Atatürk Caddesi">Atatürk Caddesi</option>
+                            <option value="Cumhuriyet Meydanı">Cumhuriyet Meydanı</option>
+                            <option value="Sahil Yolu">Sahil Yolu</option>
+                            <option value="Sanayi Sitesi">Sanayi Sitesi</option>
+                        </select>
                     </div>
+                </div>
 
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <button onclick="handleCheckIn()" class="btn btn-success w-100 btn-custom"><i class="fas fa-sign-in-alt"></i> GİRİŞ</button>
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4">Plaka</th>
+                                        <th>Konum</th>
+                                        <th>Giriş Saati</th>
+                                        <th>Durum</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vehicleList">
+                                    <tr><td colspan="4" class="text-center py-5 text-muted">Veri bekleniyor...</td></tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="col-6">
-                            <button onclick="handleCheckOut()" class="btn btn-danger w-100 btn-custom"><i class="fas fa-sign-out-alt"></i> ÇIKIŞ</button>
-                        </div>
-                    </div>
-
-                    <div id="resultArea" class="mt-4 p-3 rounded bg-light" style="display: none; border-left: 5px solid #ccc;">
-                        <p id="resultMessage" class="mb-0 fw-bold"></p>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-7 mb-4">
-                <div class="card p-4 h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="text-secondary mb-0"><i class="fas fa-list-ul"></i> İçerideki Araçlar</h5>
-                        <button onclick="loadActiveVehicles()" class="btn btn-sm btn-outline-primary"><i class="fas fa-sync-alt"></i> Yenile</button>
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                        <h5 class="text-secondary"><i class="fas fa-chart-pie"></i> Bölge Gelir Dağılımı</h5>
                     </div>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Plaka</th>
-                                    <th>Giriş Saati</th>
-                                    <th>Durum</th>
-                                </tr>
-                            </thead>
-                            <tbody id="vehicleList">
-                                <tr><td colspan="3" class="text-center text-muted">Yükleniyor...</td></tr>
-                            </tbody>
-                        </table>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-borderless">
+                                <thead class="text-muted border-bottom">
+                                    <tr>
+                                        <th>Bölge Adı</th>
+                                        <th class="text-end">Kazanç</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="revenueTable">
+                                    </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -84,108 +134,100 @@
 
     <script>
         const API_URL = "http://localhost:3000";
+        
+        // Sayfa açılınca çalıştır
+        window.onload = function() {
+            loadData();
+            // Her 3 saniyede bir verileri otomatik yenile (CANLI TAKİP HİSSİ)
+            setInterval(loadData, 3000);
+        };
 
-        // Sayfa açılınca listeyi yükle
-        window.onload = loadActiveVehicles;
+        async function loadData() {
+            await Promise.all([
+                loadVehicles(),
+                loadTotalRevenue(),
+                loadZoneRevenue()
+            ]);
+        }
 
-        // 1. LİSTELEME FONKSİYONU
-        async function loadActiveVehicles() {
+        // 1. ARAÇLARI FİLTRELEYEREK GETİR
+        async function loadVehicles() {
+            const selectedZone = document.getElementById('zoneFilter').value;
+            // API'ye filtreyi gönderiyoruz (?location=...)
+            const url = `${API_URL}/active-vehicles?location=${encodeURIComponent(selectedZone)}`;
+
             try {
-                const response = await fetch(`${API_URL}/active-vehicles`);
-                const vehicles = await response.json();
+                const res = await fetch(url);
+                const data = await res.json();
                 
-                const listBody = document.getElementById('vehicleList');
-                listBody.innerHTML = ""; // Listeyi temizle
+                const tbody = document.getElementById('vehicleList');
+                document.getElementById('activeCount').innerText = data.length; // Sayacı güncelle
 
-                if (vehicles.length === 0) {
-                    listBody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4">Otopark şu an boş 🌳</td></tr>';
+                if(data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted"><i class="fas fa-wind fa-2x mb-2"></i><br>Bu bölgede aktif araç yok.</td></tr>';
                     return;
                 }
 
-                vehicles.forEach(v => {
-                    const date = new Date(v.entry_time).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
-                    const row = `
+                tbody.innerHTML = "";
+                data.forEach(v => {
+                    const time = new Date(v.entry_time).toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
+                    tbody.innerHTML += `
                         <tr>
-                            <td><span class="plate-box">${v.plate_number}</span></td>
-                            <td><i class="far fa-clock text-muted"></i> ${date}</td>
-                            <td><span class="status-badge">Park Halinde</span></td>
+                            <td class="ps-4"><span class="plate-badge">${v.plate_number}</span></td>
+                            <td><span class="location-tag">${v.location_name || 'Bilinmiyor'}</span></td>
+                            <td><i class="far fa-clock text-muted"></i> ${time}</td>
+                            <td><span class="badge bg-success bg-opacity-10 text-success">Aktif</span></td>
                         </tr>
                     `;
-                    listBody.innerHTML += row;
                 });
-            } catch (error) {
-                console.error("Liste hatası:", error);
-            }
+
+            } catch (err) { console.error(err); }
         }
 
-        // 2. GİRİŞ İŞLEMİ
-        async function handleCheckIn() {
-            const plate = document.getElementById('plateInput').value.toUpperCase();
-            if (!plate) return alert("Plaka giriniz!");
-
+        // 2. TOPLAM GELİRİ GETİR
+        async function loadTotalRevenue() {
             try {
-                const res = await fetch(`${API_URL}/check-in`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ plate_number: plate })
-                });
+                const res = await fetch(`${API_URL}/total-revenue`);
                 const data = await res.json();
+                document.getElementById('totalRevenue').innerText = data.total_revenue;
+            } catch (err) {}
+        }
+
+        // 3. BÖLGESEL GELİR TABLOSU
+        async function loadZoneRevenue() {
+            try {
+                const res = await fetch(`${API_URL}/revenue-by-location`);
+                const data = await res.json();
+                const tbody = document.getElementById('revenueTable');
                 
-                showMessage(true, `✅ ${plate} giriş yaptı. Bariyer açıldı.`);
-                loadActiveVehicles(); // Listeyi güncelle
-            } catch (err) {
-                showMessage(false, "Bağlantı hatası!");
-            }
-        }
+                tbody.innerHTML = "";
+                let topZoneName = "-";
+                let maxRev = 0;
 
-        // 3. ÇIKIŞ İŞLEMİ
-        async function handleCheckOut() {
-            const plate = document.getElementById('plateInput').value.toUpperCase();
-            if (!plate) return alert("Plaka giriniz!");
+                data.forEach(item => {
+                    const money = Number(item.total) || 0;
+                    // En çok kazandıran bölgeyi bul
+                    if(money > maxRev) { maxRev = money; topZoneName = item.location_name; }
 
-            try {
-                const res = await fetch(`${API_URL}/check-out`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ plate_number: plate })
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="py-2">${item.location_name}</td>
+                            <td class="text-end fw-bold text-success py-2">${money} ₺</td>
+                        </tr>
+                    `;
                 });
-                const data = await res.json();
 
-                if (res.ok) {
-                    showMessage(true, `👋 ${plate} çıkış yaptı.<br>Süre: ${data.stay_duration}<br>Tutar: <span class="text-danger">${data.total_price}</span>`);
-                    loadActiveVehicles(); // Listeyi güncelle
-                } else {
-                    showMessage(false, `⚠️ ${data.error}`);
-                }
-            } catch (err) {
-                showMessage(false, "Bağlantı hatası!");
-            }
+                document.getElementById('topZone').innerText = topZoneName; // İstatistik kartına yaz
+
+            } catch (err) {}
         }
 
-        function showMessage(isSuccess, msg) {
-            const area = document.getElementById('resultArea');
-            const txt = document.getElementById('resultMessage');
-            area.style.display = 'block';
-            area.style.borderLeftColor = isSuccess ? '#198754' : '#dc3545';
-            txt.innerHTML = msg;
-        }
-
-        // 4. SİSTEMİ SIFIRLAMA (RESET)
+        // 4. SIFIRLAMA (AYNI KALDI)
         async function handleReset() {
-            if (!confirm("⚠️ DİKKAT!\n\nTüm araç kayıtları ve geçmiş silinecek.\nEmin misiniz?")) {
-                return; // Kullanıcı "İptal" derse dur.
-            }
-
-            try {
-                const res = await fetch(`${API_URL}/reset`, { method: 'DELETE' });
-                const data = await res.json();
-                
-                alert(data.message);
-                loadActiveVehicles(); // Listeyi boşalt/yenile
-                document.getElementById('plateInput').value = ""; // Kutuyu temizle
-                document.getElementById('resultArea').style.display = 'none'; // Sonuç kutusunu gizle
-            } catch (err) {
-                alert("Sıfırlama hatası!");
+            if(confirm("⚠️ Tüm veritabanı silinecek! Onaylıyor musun?")) {
+                await fetch(`${API_URL}/reset`, { method: 'DELETE' });
+                alert("Sistem temizlendi.");
+                loadData();
             }
         }
     </script>
