@@ -164,6 +164,23 @@ app.get('/active-vehicles', async (req: Request, res: Response) => {
     }
 });
 
+// 🧨 TEHLİKELİ BÖLGE: SİSTEMİ SIFIRLA
+// Bu komut tüm kayıtları siler ve araçları temizler!
+app.delete('/reset', async (req: Request, res: Response) => {
+    try {
+        // TRUNCATE: Tabloyu boşaltır
+        // CASCADE: İlişkili verileri de siler (Park kayıtları silinince araçlar da silinir)
+        // RESTART IDENTITY: ID sayacını 1'e geri alır
+        await query('TRUNCATE vehicles, parks RESTART IDENTITY CASCADE');
+        
+        console.log("⚠️ SİSTEM SIFIRLANDI!");
+        res.json({ message: 'Sistem fabrika ayarlarına döndü! 🧹' });
+    } catch (error) {
+        console.error("Sıfırlama Hatası:", error);
+        res.status(500).json({ error: 'Sıfırlama yapılamadı' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Sunucu http://localhost:${PORT} adresinde hazır! 🚀`);
 });

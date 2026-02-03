@@ -19,10 +19,14 @@
 </head>
 <body>
 
-    <div class="header-box text-center mb-5">
-        <h1><i class="fas fa-parking"></i> BilPark Yönetim Paneli</h1>
-        <p class="opacity-75">Akıllı Şehir Otopark Çözümü</p>
-    </div>
+<div class="header-box text-center mb-5 position-relative">
+    <h1><i class="fas fa-parking"></i> BilPark Yönetim Paneli</h1>
+    <p class="opacity-75">Akıllı Şehir Otopark Çözümü</p>
+    
+    <button onclick="handleReset()" class="btn btn-outline-light btn-sm position-absolute top-0 end-0 m-3">
+        <i class="fas fa-trash-alt">Sistemi Sıfırla</i> 
+    </button>
+</div>
 
     <div class="container">
         <div class="row">
@@ -164,6 +168,25 @@
             area.style.display = 'block';
             area.style.borderLeftColor = isSuccess ? '#198754' : '#dc3545';
             txt.innerHTML = msg;
+        }
+
+        // 4. SİSTEMİ SIFIRLAMA (RESET)
+        async function handleReset() {
+            if (!confirm("⚠️ DİKKAT!\n\nTüm araç kayıtları ve geçmiş silinecek.\nEmin misiniz?")) {
+                return; // Kullanıcı "İptal" derse dur.
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/reset`, { method: 'DELETE' });
+                const data = await res.json();
+                
+                alert(data.message);
+                loadActiveVehicles(); // Listeyi boşalt/yenile
+                document.getElementById('plateInput').value = ""; // Kutuyu temizle
+                document.getElementById('resultArea').style.display = 'none'; // Sonuç kutusunu gizle
+            } catch (err) {
+                alert("Sıfırlama hatası!");
+            }
         }
     </script>
 </body>
