@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../models/arac.dart';
+import '../services/otopark_servisi.dart';
 
 class VehicleExitScreen extends StatefulWidget {
   const VehicleExitScreen({super.key});
@@ -10,15 +12,18 @@ class VehicleExitScreen extends StatefulWidget {
 class _VehicleExitScreenState extends State<VehicleExitScreen> {
   final TextEditingController _plakaController = TextEditingController();
   
-  // Ekranda sonuç kartını gösterip gizlemek için değişken
-  bool _aracBulundu = false;
+  // Bulunan aracı tutmak için değişken (Başta boş)
+  Arac? _bulunanArac;
+
+  // Anlık hesaplanan ücreti ekranda göstermek için
+  double _anlikUcret = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Araç Çıkışı'),
-        backgroundColor: Colors.red, // Çıkış olduğu için Kırmızı
+        backgroundColor: Colors.red,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -44,14 +49,7 @@ class _VehicleExitScreenState extends State<VehicleExitScreen> {
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.search, color: Colors.red),
-                          onPressed: () {
-                            // Arama butonuna basınca sahte bir sonuç gösterelim
-                            if (_plakaController.text.isNotEmpty) {
-                              setState(() {
-                                _aracBulundu = true;
-                              });
-                            }
-                          },
+                          onPressed: _aracSorgula, // Butona basınca bu fonksiyon çalışacak
                         ),
                       ),
                       textCapitalization: TextCapitalization.characters,
@@ -64,8 +62,8 @@ class _VehicleExitScreenState extends State<VehicleExitScreen> {
             
             const SizedBox(height: 24),
 
-            // 2. SONUÇ FİŞİ (Sadece araç bulununca gözükecek)
-            if (_aracBulundu)
+            // 2. SONUÇ FİŞİ (Eğer araç bulunduysa göster)
+            if (_bulunanArac != null)
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -80,35 +78,28 @@ class _VehicleExitScreenState extends State<VehicleExitScreen> {
                   children: [
                     const Icon(Icons.receipt_long, size: 60, color: Colors.red),
                     const SizedBox(height: 10),
-                    Text(_plakaController.text, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                    Text(
+                      _bulunanArac!.plaka, 
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)
+                    ),
                     const Divider(thickness: 2),
                     const SizedBox(height: 10),
                     
-                    _bilgiSatiri("Giriş Saati", "10:30"),
-                    _bilgiSatiri("Çıkış Saati", "14:45"),
-                    _bilgiSatiri("Süre", "4 Saat 15 Dk"),
-                    _bilgiSatiri("Araç Tipi", "Otomobil"),
+                    _bilgiSatiri("Giriş Saati", "${_bulunanArac!.girisSaati.hour}:${_bulunanArac!.girisSaati.minute.toString().padLeft(2, '0')}"),
+                    _bilgiSatiri("Araç Tipi", _bulunanArac!.tip),
                     
                     const Divider(thickness: 2),
                     const SizedBox(height: 10),
                     const Text("TOPLAM TUTAR", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-                    const Text(
-                      "120.00 ₺", 
-                      style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.green),
+                    Text(
+                      "$_anlikUcret ₺", 
+                      style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.green),
                     ),
                     const SizedBox(height: 20),
                     
                     // ÖDEME AL BUTONU
                     ElevatedButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Ödeme alındı, çıkış onaylandı! ✅'), backgroundColor: Colors.green),
-                        );
-                        setState(() {
-                          _aracBulundu = false; // Ekranı temizle
-                          _plakaController.clear();
-                        });
-                      },
+                      onPressed: _cikisYapVeTahsilEt,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
@@ -126,7 +117,59 @@ class _VehicleExitScreenState extends State<VehicleExitScreen> {
     );
   }
 
-  // Fişteki satırları düzenleyen yardımcı fonksiyon
+  // --- YARDIMCI FONKSİYONLAR ---
+
+  // 1. Servise gidip plakayı soran fonksiyon
+  void _aracSorgula() {
+    // Klavyeyi kapat
+    FocusScope.of(context).unfocus(); 
+
+    if (_plakaController.text.isEmpty) return;
+
+    setState(() {
+      // Servisten aracı bul
+      _bulunanArac = OtoparkServisi().aracBul(_plakaController.text);
+      
+      if (_bulunanArac == null) {
+        // Araç bulunamadıysa uyarı ver
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Bu plakaya ait içeride araç yok! ❌')),
+        );
+      } else {
+        // Araç bulunduysa, tahmini ücreti hesapla (Göstermelik)
+        Duration sure = DateTime.now().difference(_bulunanArac!.girisSaati);
+        double saat = sure.inMinutes / 60.0;
+        if (saat < 0.25) { // 15 dk altı ücretsiz
+           _anlikUcret = 0;
+        } else {
+           _anlikUcret = (saat.ceil()) * 30.0; // Saatlik 30 TL (Ayarlardan da çekilebilir ileride)
+        }
+      }
+    });
+  }
+
+  // 2. Çıkışı onaylayan fonksiyon
+  void _cikisYapVeTahsilEt() {
+    if (_bulunanArac != null) {
+      setState(() {
+        // Servisteki çıkış işlemini çalıştır (Ücreti kesinleştirir ve aracı dışarı atar)
+        OtoparkServisi().aracCikis(_bulunanArac!, 30.0);
+        
+        // Başarı mesajı
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${_bulunanArac!.plaka} çıkışı yapıldı. Tahsilat: $_anlikUcret ₺ ✅'), 
+            backgroundColor: Colors.green
+          ),
+        );
+
+        // Ekranı temizle
+        _bulunanArac = null;
+        _plakaController.clear();
+      });
+    }
+  }
+
   Widget _bilgiSatiri(String baslik, String deger) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),

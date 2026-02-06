@@ -1,28 +1,51 @@
-import 'settings_screen.dart';
-import 'history_screen.dart';
-import 'vehicle_exit_screen.dart';
-import 'vehicle_entry_screen.dart';
 import 'package:flutter/material.dart';
+import '../services/otopark_servisi.dart'; // Servisi çağırmak için
+import 'vehicle_entry_screen.dart';
+import 'vehicle_exit_screen.dart';
+import 'history_screen.dart';
+import 'settings_screen.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  // Canlı Veriler
+  int _mevcutArac = 0;
+  int _kapasite = 20; // Otoparkın toplam kapasitesi (Örn: 20 araçlık)
+  
+  @override
+  void initState() {
+    super.initState();
+    // Ekran ilk açıldığında verileri çek
+    _bilgileriGuncelle();
+  }
+
+  // Servisten güncel sayıları alıp ekranı boyayan fonksiyon
+  void _bilgileriGuncelle() {
+    setState(() {
+      _mevcutArac = OtoparkServisi().icerdekiAracSayisi();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Doluluk oranını hesapla (Yüzde)
+    double dolulukOrani = _mevcutArac / _kapasite;
+
     return Scaffold(
-      backgroundColor: Colors.grey[100], // Hafif gri arka plan
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text('BilPark Panel'),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
         actions: [
-          // Çıkış Butonu
           IconButton(
-            icon: const Icon(Icons.exit_to_app),
-            onPressed: () {
-              // Çıkış yapıp login ekranına dönme kodu buraya gelecek
-              Navigator.pop(context); 
-            },
+            icon: const Icon(Icons.refresh),
+            onPressed: _bilgileriGuncelle, // Manuel yenileme butonu
           ),
         ],
       ),
@@ -30,7 +53,7 @@ class DashboardScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // 1. ÜST BİLGİ KARTI (Doluluk Durumu)
+            // 1. CANLI BİLGİ KARTI
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -45,68 +68,76 @@ class DashboardScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Column(
+              child: Column(
                 children: [
-                  Text(
+                  const Text(
                     'Anlık Doluluk',
                     style: TextStyle(color: Colors.white70, fontSize: 16),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
-                    '% 45', // Burası ileride veritabanından gelecek
-                    style: TextStyle(
+                    '% ${(dolulukOrani * 100).toStringAsFixed(0)}', // Yüzdeyi hesapla
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 40,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
-                    '45 / 100 Araç',
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                    '$_mevcutArac / $_kapasite Araç',
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                  const SizedBox(height: 10),
+                  // Doluluk Çubuğu (Progress Bar)
+                  LinearProgressIndicator(
+                    value: dolulukOrani,
+                    backgroundColor: Colors.white24,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      dolulukOrani > 0.9 ? Colors.red : Colors.green, // Dolunca kırmızı ol
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
 
-            // 2. MENÜ BUTONLARI (Izgara Yapısı)
+            // 2. MENÜ BUTONLARI
             Expanded(
               child: GridView.count(
-                crossAxisCount: 2, // Yan yana 2 kutu olsun
+                crossAxisCount: 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 children: [
-                  // BU KISMI:
                   _menuKarti(
                     icon: Icons.directions_car,
                     title: 'Araç Girişi',
                     color: Colors.green,
-                    onTap: () {
-                      // Buradaki debugPrint'i siliyoruz, yerine sayfa geçişi yazıyoruz:
-                      Navigator.push(
+                    onTap: () async {
+                      // Gidilen sayfadan dönünce verileri güncelle (await)
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const VehicleEntryScreen()),
                       );
+                      _bilgileriGuncelle(); 
                     },
                   ),
-                 _menuKarti(
+                  _menuKarti(
                     icon: Icons.payment,
                     title: 'Araç Çıkışı',
                     color: Colors.red,
-                    onTap: () {
-                      // Çıkış Sayfasına Git
-                      Navigator.push(
+                    onTap: () async {
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const VehicleExitScreen()),
                       );
+                      _bilgileriGuncelle();
                     },
                   ),
-                 _menuKarti(
+                  _menuKarti(
                     icon: Icons.history,
                     title: 'Geçmiş',
                     color: Colors.orange,
                     onTap: () {
-                      // Geçmiş Sayfasına Git
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const HistoryScreen()),
@@ -118,14 +149,13 @@ class DashboardScreen extends StatelessWidget {
                     title: 'Ayarlar',
                     color: Colors.blueGrey,
                     onTap: () {
-                       // Ayarlar Sayfasına Git
                        Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const SettingsScreen()),
                       );
                     },
                   ),
-               ],
+                ],
               ),
             ),
           ],
@@ -134,7 +164,6 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // Tekrar eden kart kodlarını buraya fonksiyon olarak aldık (Clean Code)
   Widget _menuKarti({required IconData icon, required String title, required Color color, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
@@ -165,10 +194,7 @@ class DashboardScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ],
         ),

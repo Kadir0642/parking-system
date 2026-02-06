@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
-import 'screens/login_screen.dart'; // <--- BU SATIRI EKLE
+import 'screens/login_screen.dart';
+import 'services/otopark_servisi.dart'; // Servisi import etmeyi unutma
 
-void main() {
+void main() async {
+  // Flutter motorunu başlat (Async işlemler için gerekli)
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Eski kayıtları yükle
+  await OtoparkServisi().verileriYukle();
+  
   runApp(const BilParkApp());
 }
+
 
 class BilParkApp extends StatelessWidget {
   const BilParkApp({super.key});

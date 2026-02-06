@@ -1,5 +1,5 @@
-import 'dashboard_screen.dart';
 import 'package:flutter/material.dart';
+import 'dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,6 +11,10 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   // Şifrenin görünüp görünmediğini kontrol eden değişken
   bool _sifreGozuksunMu = false;
+
+  // 1. KUTULARI KONTROL ETMEK İÇİN "KUMANDALAR" (Controllers)
+  final TextEditingController _kullaniciAdiController = TextEditingController();
+  final TextEditingController _sifreController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 1. LOGO VE BAŞLIK BÖLÜMÜ
+                // LOGO VE BAŞLIK
                 const Icon(
                   Icons.local_parking_rounded,
                   size: 100,
@@ -50,8 +54,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // 2. KULLANICI ADI KUTUSU
+                // 2. KULLANICI ADI KUTUSU (Controller bağlandı)
                 TextField(
+                  controller: _kullaniciAdiController, // <-- BURAYI EKLEDİK
                   decoration: InputDecoration(
                     labelText: 'Kullanıcı Adı',
                     prefixIcon: const Icon(Icons.person),
@@ -62,9 +67,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // 3. ŞİFRE KUTUSU
+                // 3. ŞİFRE KUTUSU (Controller bağlandı)
                 TextField(
-                  obscureText: !_sifreGozuksunMu, // Şifreyi gizle/göster
+                  controller: _sifreController, // <-- BURAYI EKLEDİK
+                  obscureText: !_sifreGozuksunMu,
                   decoration: InputDecoration(
                     labelText: 'Şifre',
                     prefixIcon: const Icon(Icons.lock),
@@ -85,15 +91,47 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // 4. GİRİŞ BUTONU
-              // 4. GİRİŞ BUTONU (Burası değişti)
+                // 4. GİRİŞ BUTONU (Artık güvenlik kontrolü yapıyor)
                 ElevatedButton(
                   onPressed: () {
-                    // Butona basınca Dashboard sayfasına git
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const DashboardScreen()),
-                    );
+                    // Kutulardaki yazıları al, boşlukları (trim) temizle
+                    String kAdi = _kullaniciAdiController.text.trim();
+                    String sifre = _sifreController.text.trim();
+
+                    // --- GÜVENLİK KONTROLÜ BAŞLIYOR ---
+                    
+                    if (kAdi.isEmpty || sifre.isEmpty) {
+                      // HATA: Alanlar boşsa
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Lütfen kullanıcı adı ve şifreyi girin! ⚠️"),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                    } 
+                    else if (kAdi == "admin" && sifre == "123456") {
+                      // BAŞARILI: Giriş izni ver
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Giriş Başarılı! Hoşgeldiniz 👋"),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+                      );
+                    } 
+                    else {
+                      // HATA: Yanlış bilgi
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Hatalı kullanıcı adı veya şifre! ⛔"),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.indigo,
@@ -108,7 +146,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
-              ], // <--- İŞTE BU KÖŞELİ PARANTEZ EKSİKTİ
+                
+                const SizedBox(height: 20),
+                const Text(
+                  "Demo Giriş: admin / 123456",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey),
+                )
+              ],
             ),
           ),
         ),
